@@ -1,7 +1,5 @@
-# PongC
-Classic game of Pong in the terminal made in C.
-
-![](screenshots/gameplay.gif)
+# Pong C Threads
+Classic game of Pong in the terminal made in C and implemented with threads.
 
 # How to build
 Simply run:
