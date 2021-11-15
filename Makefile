@@ -1,2 +1,8 @@
+HEADERS = src/
+SRC = src/*.c
+LIBRARY = -lncurses
+FLAGS = -Wall -Wextra -W -g
+FILE = pong
+
 default:
-	gcc -W -g -Wall -Werror -Wextra main.c -lncurses -o pong
+	gcc $(FLAGS) $(SRC) $(LIBRARY) -I $(HEADERS) -o $(FILE)
