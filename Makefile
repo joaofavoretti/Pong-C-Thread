@@ -6,3 +6,6 @@ FILE = pong
 
 default:
 	gcc $(FLAGS) $(SRC) $(LIBRARY) -I $(HEADERS) -o $(FILE)
+
+run:
+	./$(FILE)
