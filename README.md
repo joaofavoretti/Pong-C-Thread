@@ -2,7 +2,13 @@
 Classic game of Pong in the terminal made in C and implemented with threads.
 
 # How to build
-Simply run:
+
+If you do not have ncurses installed, use:
+```shell
+(UBUNTU) sudo apt install libncurses5-dev
+```
+
+Then, simply run:
 ```shell
 make
 ```
