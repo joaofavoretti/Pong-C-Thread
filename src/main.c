@@ -7,7 +7,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-
+#include <pthread.h>
 #include <window.h>
 #include <game_config.h>
 #include <player.h>
