@@ -7,7 +7,8 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-
+#include <pthread.h>
+#include <semaphore.h>
 #include <window.h>
 #include <game_config.h>
 #include <player.h>
@@ -24,6 +25,47 @@ int player_default_height,
     player_right_start_y,
     player_left_start_x,
     player_right_start_x;
+sem_t semaphore;
+
+void *ball_thread_routine(void* args) {
+  sem_t *semaphore = (sem_t *) args;
+  sem_wait(semaphore);
+  auto_move_ball();
+  sem_post(semaphore);
+  return NULL;
+}
+
+void *oponent_thread_routine(void* args) {
+  sem_t *semaphore = (sem_t *) args;
+  sem_wait(semaphore);
+  auto_move_opponent();
+  sem_post(semaphore);
+  return NULL;
+}
+
+pthread_t create_ball_thread(sem_t *semaphore) {
+  pthread_t thread_id;
+  if (pthread_create(&thread_id, NULL, &ball_thread_routine, semaphore))
+      fprintf(stderr, "Error to create ball thread!\n");
+  return thread_id;
+}
+
+pthread_t create_oponent_thread(sem_t *semaphore) {
+  pthread_t thread_id;
+  if (pthread_create(&thread_id, NULL, &oponent_thread_routine, semaphore))
+      fprintf(stderr, "Error to create oponent thread!\n");
+  return thread_id;
+}
+
+void join_ball_thread(pthread_t thread_id) {
+  if (pthread_join(thread_id, NULL))
+      fprintf(stderr, "Error to join ball thread!\n");
+}
+
+void join_oponent_thread(pthread_t thread_id) {
+  if (pthread_join(thread_id, NULL))
+      fprintf(stderr, "Error to join oponent thread!\n");
+}
 
 int main()
 {
@@ -113,8 +155,12 @@ int main()
     /* Atualiza ball e opponent caso necessário */
     if (diff >= TICK_DELAY)
     {
-      auto_move_ball();
-      auto_move_opponent();
+      sem_init(&semaphore, 0, 1);
+      pthread_t ball_thread_id = create_ball_thread(&semaphore);
+      pthread_t oponent_thread_id = create_oponent_thread(&semaphore);
+      join_ball_thread(ball_thread_id);
+      join_oponent_thread(oponent_thread_id);
+      sem_destroy(&semaphore);
       start = now;
     }
   }
