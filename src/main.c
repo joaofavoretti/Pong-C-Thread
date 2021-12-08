@@ -26,6 +26,7 @@ int player_default_height,
     player_left_start_x,
     player_right_start_x;
 sem_t semaphore;
+unsigned int diff;
 
 void *ball_thread_routine(void* args) {
   sem_t *semaphore = (sem_t *) args;
@@ -71,6 +72,7 @@ int main()
 {
   int ch = 0;
   bool done = false;
+  diff = 0;
 
   /* Inicia seed */
   srand(time(NULL));
@@ -150,7 +152,7 @@ int main()
     show_ingame_line();
 
     update_time(&now);
-    unsigned int diff = time_difference(&start, &now);
+    diff = time_difference(&start, &now);
 
     /* Atualiza ball e opponent caso necessário */
     if (diff >= TICK_DELAY)
