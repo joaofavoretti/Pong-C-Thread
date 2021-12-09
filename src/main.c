@@ -17,7 +17,6 @@
 /* Global variables */
 pong_ball ball;
 pong_player player, opponent;
-struct timeval start, now;
 WINDOW *field;
 int player_default_height,
     player_default_width,
@@ -26,53 +25,85 @@ int player_default_height,
     player_left_start_x,
     player_right_start_x;
 sem_t semaphore;
-unsigned int diff;
 
-void *ball_thread_routine(void* args) {
+void *ball_thread_routine(void *args)
+{
   sem_t *semaphore = (sem_t *) args;
-  sem_wait(semaphore);
-  auto_move_ball();
-  sem_post(semaphore);
+  struct timeval start, now;
+  update_time(&start);
+  while (true)
+  {
+    sem_wait(semaphore);
+    update_time(&now);
+    if (time_difference(&start, &now) >= TICK_DELAY)
+    {
+      auto_move_ball();
+      start = now;
+    }
+    sem_post(semaphore);
+  }
   return NULL;
 }
 
-void *oponent_thread_routine(void* args) {
+void *opponent_thread_routine(void *args)
+{
   sem_t *semaphore = (sem_t *) args;
-  sem_wait(semaphore);
-  auto_move_opponent();
-  sem_post(semaphore);
+  struct timeval start, now;
+  update_time(&start);
+  while (true)
+  {
+    sem_wait(semaphore);
+    update_time(&now);
+    if (time_difference(&start, &now) >= TICK_DELAY)
+    {
+      auto_move_opponent();
+      start = now;
+    }
+    sem_post(semaphore);
+  }
   return NULL;
 }
 
-pthread_t create_ball_thread(sem_t *semaphore) {
+pthread_t create_ball_thread(sem_t *semaphore)
+{
   pthread_t thread_id;
   if (pthread_create(&thread_id, NULL, &ball_thread_routine, semaphore))
-      fprintf(stderr, "Error to create ball thread!\n");
+  {
+    fprintf(stderr, "Error to create ball thread!\n");
+  }
   return thread_id;
 }
 
-pthread_t create_oponent_thread(sem_t *semaphore) {
+pthread_t create_opponent_thread(sem_t *semaphore)
+{
   pthread_t thread_id;
-  if (pthread_create(&thread_id, NULL, &oponent_thread_routine, semaphore))
-      fprintf(stderr, "Error to create oponent thread!\n");
+  if (pthread_create(&thread_id, NULL, &opponent_thread_routine, semaphore))
+  {
+    fprintf(stderr, "Error to create opponent thread!\n");
+  }
   return thread_id;
 }
 
-void join_ball_thread(pthread_t thread_id) {
+void join_ball_thread(pthread_t thread_id)
+{
   if (pthread_join(thread_id, NULL))
-      fprintf(stderr, "Error to join ball thread!\n");
+  {
+    fprintf(stderr, "Error to join ball thread!\n");
+  }
 }
 
-void join_oponent_thread(pthread_t thread_id) {
+void join_opponent_thread(pthread_t thread_id)
+{
   if (pthread_join(thread_id, NULL))
-      fprintf(stderr, "Error to join oponent thread!\n");
+  {
+    fprintf(stderr, "Error to join opponent thread!\n");
+  }
 }
 
 int main()
 {
   int ch = 0;
   bool done = false;
-  diff = 0;
 
   /* Inicia seed */
   srand(time(NULL));
@@ -107,12 +138,16 @@ int main()
 
   refresh();
 
-  /* Inicia a struct timeval start para medir o tamanho do TICK */
-  update_time(&start);
+  /* Inicia as threads para movimentação da bola e do oponente */
+  sem_init(&semaphore, 0, 1);
+  pthread_t ball_thread_id = create_ball_thread(&semaphore);
+  pthread_t opponent_thread_id = create_opponent_thread(&semaphore);
 
   /* Loop principal */
   while (!done)
   {
+    sem_wait(&semaphore);
+
     /* Usa a entrada do usuario se tiver */
     ch = getch();
 
@@ -151,20 +186,7 @@ int main()
     /* Desenhar a linha central */
     show_ingame_line();
 
-    update_time(&now);
-    diff = time_difference(&start, &now);
-
-    /* Atualiza ball e opponent caso necessário */
-    if (diff >= TICK_DELAY)
-    {
-      sem_init(&semaphore, 0, 1);
-      pthread_t ball_thread_id = create_ball_thread(&semaphore);
-      pthread_t oponent_thread_id = create_oponent_thread(&semaphore);
-      join_ball_thread(ball_thread_id);
-      join_oponent_thread(oponent_thread_id);
-      sem_destroy(&semaphore);
-      start = now;
-    }
+    sem_post(&semaphore);
   }
 
   /* CLOSE NCURSES */
