@@ -6,6 +6,9 @@
 #include <ball.h>
 #include <player.h>
 
+#define MAX_VELX 20
+#define MAX_VELY 10
+
 /* Rand para retornar -1 / 1  */
 int rand_sign()
 {
@@ -72,8 +75,8 @@ int auto_move_ball()
     /* Adiciona velocidade aleatória para a bola quando há colisao */
     if (ball.collided)
     {
-        ball.vx += sign(ball.vx) * rand() % 3;
-        ball.vy += sign(ball.vy) * rand() % 2;
+        ball.vx += ball.vx < MAX_VELX ? sign(ball.vx) * rand() % 2 : 0;
+        ball.vy += ball.vy < MAX_VELY ? sign(ball.vy) * rand() % 2 : 0;
         ball.collided = false;
         
         /* Atualizar players */

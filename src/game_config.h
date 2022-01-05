@@ -7,6 +7,8 @@
 #define QUIT_GAME 'q'
 #define RESTART_GAME 'r'
 
+#include <ncurses.h>
+
 extern struct timeval start, now; /* {tv_sec = seconds, tv_usec = nanoseconds} */
 
 int init_ncurses_config(WINDOW *root, WINDOW *stdscr);

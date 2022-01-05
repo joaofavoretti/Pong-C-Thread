@@ -3,6 +3,10 @@
         "game_config.h": "c",
         "unistd.h": "c",
         "window.h": "c",
-        "ncurses.h": "c"
+        "ncurses.h": "c",
+        "in.h": "c",
+        "player.h": "c",
+        "time.h": "c",
+        "threads.h": "c"
     }
 }

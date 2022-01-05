@@ -13,6 +13,8 @@
 #include <game_config.h>
 #include <player.h>
 #include <ball.h>
+#include <threads.h>
+
 
 /* Global variables */
 pong_ball ball;
@@ -25,80 +27,6 @@ int player_default_height,
     player_left_start_x,
     player_right_start_x;
 sem_t semaphore;
-
-void *ball_thread_routine(void *args)
-{
-  sem_t *semaphore = (sem_t *) args;
-  struct timeval start, now;
-  update_time(&start);
-  while (true)
-  {
-    sem_wait(semaphore);
-    update_time(&now);
-    if (time_difference(&start, &now) >= TICK_DELAY)
-    {
-      auto_move_ball();
-      start = now;
-    }
-    sem_post(semaphore);
-  }
-  return NULL;
-}
-
-void *opponent_thread_routine(void *args)
-{
-  sem_t *semaphore = (sem_t *) args;
-  struct timeval start, now;
-  update_time(&start);
-  while (true)
-  {
-    sem_wait(semaphore);
-    update_time(&now);
-    if (time_difference(&start, &now) >= TICK_DELAY)
-    {
-      auto_move_opponent();
-      start = now;
-    }
-    sem_post(semaphore);
-  }
-  return NULL;
-}
-
-pthread_t create_ball_thread(sem_t *semaphore)
-{
-  pthread_t thread_id;
-  if (pthread_create(&thread_id, NULL, &ball_thread_routine, semaphore))
-  {
-    fprintf(stderr, "Error to create ball thread!\n");
-  }
-  return thread_id;
-}
-
-pthread_t create_opponent_thread(sem_t *semaphore)
-{
-  pthread_t thread_id;
-  if (pthread_create(&thread_id, NULL, &opponent_thread_routine, semaphore))
-  {
-    fprintf(stderr, "Error to create opponent thread!\n");
-  }
-  return thread_id;
-}
-
-void join_ball_thread(pthread_t thread_id)
-{
-  if (pthread_join(thread_id, NULL))
-  {
-    fprintf(stderr, "Error to join ball thread!\n");
-  }
-}
-
-void join_opponent_thread(pthread_t thread_id)
-{
-  if (pthread_join(thread_id, NULL))
-  {
-    fprintf(stderr, "Error to join opponent thread!\n");
-  }
-}
 
 int main()
 {
@@ -146,38 +74,39 @@ int main()
   /* Loop principal */
   while (!done)
   {
+    
     sem_wait(&semaphore);
-
+    
     /* Usa a entrada do usuario se tiver */
     ch = getch();
 
     switch (ch)
     {
-    case PLAYER_UP: // Move player up
-      if (player.window.posY > 0) {
-        player.window.posY--;
-        update_pong_player();
-      }
+      case PLAYER_UP: // Move player up
+        if (player.window.posY > 0){
+          player.window.posY--;
+          update_pong_player();
+        }
       break;
-    case PLAYER_DOWN: // Move player down
-      if (player.window.posY + player.window.height < LINES) {
-        player.window.posY++;
-        update_pong_player();
-      }
+      case PLAYER_DOWN: // Move player down
+        if (player.window.posY + player.window.height < LINES) {
+          player.window.posY++;
+          update_pong_player();
+        }
       break;
-    case RESTART_GAME: // Reset the game
-      destroy_pong_player();
-      init_pong_player();
+      case RESTART_GAME: // Reset the game
+        destroy_pong_player();
+        init_pong_player();
 
-      destroy_pong_opponent();
-      init_pong_opponent();
+        destroy_pong_opponent();
+        init_pong_opponent();
 
-      destroy_pong_ball();
-      init_pong_ball();
-      break;
-    case QUIT_GAME: // Quit Game
-      done = true;
-      break;
+        destroy_pong_ball();
+        init_pong_ball();
+        break;
+      case QUIT_GAME: // Quit Game
+        done = true;
+        break;
     }
 
     /* Exibir os scores */
